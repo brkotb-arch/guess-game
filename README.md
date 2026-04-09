@@ -1,7 +1,6 @@
-Вот **полный текст README.md** — копируй **от первой до последней строки**:
 
-```markdown
-# 🎮 Угадай число — веб-игра на Flask
+```разметка
+# 🎮 Угадай число — влаб-игра на Фляга
 
 Веб-версия классической игры "Угадай число" с тремя режимами, искусственным интеллектом, звуками и таблицей рекордов.
 
@@ -16,20 +15,20 @@
 
 ## 🛠 Технологии
 
-- **Backend:** Python, Flask
-- **Frontend:** HTML5, CSS3, JavaScript
-- **Звуки:** Web Audio API
+- **Бекент:** Python, Flask
+- **Фронтенд:** HTML5, CSS3, JavaScript
+- **Звуки:** API веб-аудио
 - **Хранение данных:** JSON
 
 ## 🚀 Быстрый старт
 
-```bash
-git clone https://github.com/brkotb-arch/guess-game.git
-cd guess-game
-python -m venv venv
-venv\Scripts\activate
-pip install -r requirements.txt
-python app.py
+```баш
+git клон https://github.com/brkotb-arch/guess-game.git
+игра-угадайка на компакт-диске
+питон -м венв венв
+венв\Сценарии\активировать
+pip install -r требования.txt
+приложение Python.py
 ```
 
 Открой в браузере: `http://127.0.0.1:5000`
@@ -44,21 +43,21 @@ python app.py
 ## 📁 Структура проекта
 
 ```
-guess-game/
-├── app.py              # Главный Flask-сервер
-├── templates/
-│   └── index.html      # Интерфейс игры
-├── static/
-│   └── sounds.js       # Звуки через Web Audio API
-├── data/
-│   └── records.json    # Таблица рекордов
-├── requirements.txt    # Зависимости
-└── README.md           # Этот файл
+игра в догадки.
+├── app.py # Главный Flask-сервер
+├── шаблоны/
+│ └── index.html # Интерфейс игры
+├── статический/
+│ └── sounds.js # Знакомство с API веб-аудио
+├── данные/
+│ └── records.json # Таблица запись
+├── требования.txt # Зависимости
+└── README.md # Этот файл
 ```
 
 ## 👤 Автор
 
-**brkotb-arch**
+**бркотб-арка**
 
 ---
 
