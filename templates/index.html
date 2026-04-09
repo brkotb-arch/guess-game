@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎮 Угадай число</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        /* Карточка игры */
+        .game-card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            animation: fadeIn 0.5s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        h1 {
+            text-align: center;
+            color: #333;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+        }
+        
+        /* Переключение режимов */
+        .mode-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+        }
+        
+        .mode-tab {
+            flex: 1;
+            padding: 12px;
+            background: none;
+            border: none;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 10px;
+            transition: all 0.3s;
+            color: #666;
+        }
+        
+        .mode-tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .mode-tab:hover:not(.active) {
+            background: #f0f0f0;
+        }
+        
+        /* Панели режимов */
+        .mode-panel {
+            display: none;
+        }
+        
+        .mode-panel.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        /* Элементы управления */
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border 0.3s;
+        }
+        
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            width: 100%;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102,126,234,0.4);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            margin-top: 10px;
+        }
+        
+        /* Статус и статистика */
+        .status {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            text-align: center;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .stat-card {
+            flex: 1;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 28px;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        /* История ходов */
+        .history {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+        
+        .history-item {
+            padding: 8px;
+            border-bottom: 1px solid #e0e0e0;
+            font-size: 14px;
+        }
+        
+        .history-item:last-child {
+            border-bottom: none;
+        }
+        
+        /* Таблица рекордов */
+        .records-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .records-table th,
+        .records-table td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .records-table th {
+            background: #667eea;
+            color: white;
+        }
+        
+        /* Контроль громкости */
+        .volume-control {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+        
+        .volume-control input {
+            flex: 1;
+            width: auto;
+        }
+        
+        /* Адаптив */
+        @media (max-width: 600px) {
+            .game-card {
+                padding: 20px;
+            }
+            
+            h1 {
+                font-size: 1.8em;
+            }
+            
+            .stats {
+                flex-direction: column;
+            }
+            
+            .mode-tabs {
+                flex-direction: column;
+            }
+        }
+        
+        /* Анимация для звуков */
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        .sound-effect {
+            animation: pulse 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="game-card">
+            <h1>🎮 УГАДАЙ ЧИСЛО</h1>
+            <div class="subtitle">Испытай свою удачу и интеллект!</div>
+            
+            <!-- Переключение режимов -->
+            <div class="mode-tabs">
+                <button class="mode-tab active" data-mode="classic">🎯 Классический</button>
+                <button class="mode-tab" data-mode="ai">🤖 ИИ угадывает</button>
+                <button class="mode-tab" data-mode="stats">📊 Статистика</button>
+            </div>
+            
+            <!-- Режим 1: Классический -->
+            <div id="classicMode" class="mode-panel active">
+                <div class="form-group">
+                    <label>👤 Твоё имя</label>
+                    <input type="text" id="playerName" placeholder="Введи имя" value="Игрок">
+                </div>
+                
+                <div class="form-group">
+                    <label>⚡ Сложность</label>
+                    <select id="difficulty">
+                        <option value="легко">🍃 Легко (1-10, 10 попыток)</option>
+                        <option value="средне" selected>⚡ Средне (1-20, 8 попыток)</option>
+                        <option value="хардкор">🔥 Хардкор (1-50, 6 попыток)</option>
+                    </select>
+                </div>
+                
+                <button id="startClassicBtn">🎮 Начать игру</button>
+                
+                <div id="classicGameArea" style="display: none;">
+                    <div class="stats">
+                        <div class="stat-card">
+                            <div class="stat-value" id="attemptsUsed">0</div>
+                            <div class="stat-label">Попыток использовано</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="attemptsLeft">0</div>
+                            <div class="stat-label">Осталось попыток</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="scoreValue">0</div>
+                            <div class="stat-label">Очки</div>
+                        </div>
+                    </div>
+                    
+                    <div class="status" id="statusMsg">👉 Нажми "Начать игру"</div>
+                    
+                    <div class="form-group">
+                        <input type="number" id="guessInput" placeholder="Введи число">
+                    </div>
+                    <button id="guessBtn">🤔 Угадать</button>
+                    <button id="resetClassicBtn" class="btn-secondary">🔄 Новая игра</button>
+                    
+                    <div class="history" id="historyBox">
+                        <div class="history-item">💡 История ходов будет здесь</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Режим 2: ИИ угадывает -->
+            <div id="aiMode" class="mode-panel">
+                <div class="form-group">
+                    <label>👤 Твоё имя</label>
+                    <input type="text" id="aiPlayerName" placeholder="Введи имя" value="Игрок">
+                </div>
+                
+                <div class="form-group">
+                    <label>⚡ Сложность</label>
+                    <select id="aiDifficulty">
+                        <option value="легко">🍃 Легко (1-10)</option>
+                        <option value="средне" selected>⚡ Средне (1-20)</option>
+                        <option value="хардкор">🔥 Хардкор (1-50)</option>
+                    </select>
+                </div>
+                
+                <button id="startAiBtn">🤖 Начать (ИИ угадывает)</button>
+                
+                <div id="aiGameArea" style="display: none;">
+                    <div class="stats">
+                        <div class="stat-card">
+                            <div class="stat-value" id="aiAttempts">0</div>
+                            <div class="stat-label">Попыток ИИ</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="aiRemaining">0</div>
+                            <div class="stat-label">Осталось попыток</div>
+                        </div>
+                    </div>
+                    
+                    <div class="status" id="aiStatusMsg">🤖 ИИ готов угадывать!</div>
+                    
+                    <div id="aiGuessArea" style="text-align: center; padding: 20px;">
+                        <div style="font-size: 24px; margin-bottom: 20px;">🤖 ИИ думает...</div>
+                        <div style="font-size: 48px; font-weight: bold; margin: 20px 0;" id="aiGuessDisplay">?</div>
+                        <div class="form-group">
+                            <select id="aiAnswer" style="width: 100%; margin-bottom: 10px;">
+                                <option value="">Выбери ответ...</option>
+                                <option value="больше">📈 Моё число БОЛЬШЕ</option>
+                                <option value="меньше">📉 Моё число МЕНЬШЕ</option>
+                                <option value="равно">🎯 РАВНО! ИИ угадал!</option>
+                            </select>
+                            <button id="aiAnswerBtn">✅ Ответить</button>
+                        </div>
+                    </div>
+                    
+                    <button id="resetAiBtn" class="btn-secondary">🔄 Новая игра</button>
+                    
+                    <div class="history" id="aiHistoryBox">
+                        <div class="history-item">💡 История предположений ИИ</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Режим 3: Статистика и рекорды -->
+            <div id="statsMode" class="mode-panel">
+                <h3 style="margin-bottom: 20px;">🏆 Топ рекордов</h3>
+                <div style="overflow-x: auto;">
+                    <table class="records-table" id="recordsTable">
+                        <thead>
+                            <tr><th>#</th><th>Игрок</th><th>Очки</th><th>Сложность</th><th>Дата</th></tr>
+                        </thead>
+                        <tbody id="recordsBody">
+                            <tr><td colspan="5">Загрузка...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <button id="refreshRecordsBtn" style="margin-top: 20px;">🔄 Обновить</button>
+            </div>
+            
+            <!-- Контроль громкости -->
+            <div class="volume-control">
+                <span>🔊</span>
+                <input type="range" id="volumeSlider" min="0" max="100" value="70">
+                <span id="volumeValue">70%</span>
+            </div>
+        </div>
+    </div>
+    
+    <script src="{{ url_for('static', filename='sounds.js') }}"></script>
+    <script>
+        // -------------------- ЗВУКИ --------------------
+        let audioCtx = null;
+        let masterVolume = 0.7;
+        
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+        
+        function playTone(freq, duration) {
+            if (!audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.frequency.value = freq;
+            osc.type = 'sine';
+            const now = audioCtx.currentTime;
+            gain.gain.setValueAtTime(0, now);
+            gain.gain.linearRampToValueAtTime(masterVolume, now + 0.02);
+            gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+            osc.start();
+            osc.stop(now + duration);
+        }
+        
+        function playWebSound(soundType) {
+            fetch(`/api/sounds/${soundType}`)
+                .then(res => res.json())
+                .then(data => {
+                    const freqs = data.data.frequencies;
+                    const dur = data.data.duration;
+                    freqs.forEach((f, i) => {
+                        setTimeout(() => playTone(f, dur), i * 150);
+                    });
+                })
+                .catch(() => {
+                    const fallback = {
+                        win: [523.25, 659.25, 783.99],
+                        lose: [392, 349.23, 293.66, 261.63],
+                        achievement: [784, 987.77, 1174.66]
+                    };
+                    const freqs = fallback[soundType] || fallback.win;
+                    freqs.forEach((f, i) => setTimeout(() => playTone(f, 0.25), i * 120));
+                });
+        }
+        
+        // -------------------- ПЕРЕКЛЮЧЕНИЕ РЕЖИМОВ --------------------
+        document.querySelectorAll('.mode-tab').forEach(tab => {
+            tab.onclick = () => {
+                document.querySelectorAll('.mode-tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.mode-panel').forEach(p => p.classList.remove('active'));
+                tab.classList.add('active');
+                document.getElementById(tab.dataset.mode + 'Mode').classList.add('active');
+            };
+        });
+        
+        // -------------------- КЛАССИЧЕСКИЙ РЕЖИМ --------------------
+        let classicActive = false;
+        
+        async function startClassicGame() {
+            const name = document.getElementById('playerName').value || 'Игрок';
+            const difficulty = document.getElementById('difficulty').value;
+            
+            const response = await fetch('/api/start', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: name, difficulty: difficulty })
+            });
+            
+            const data = await response.json();
+            
+            if (data.status === 'started') {
+                classicActive = true;
+                document.getElementById('classicGameArea').style.display = 'block';
+                document.getElementById('startClassicBtn').style.display = 'none';
+                document.getElementById('statusMsg').innerHTML = data.message;
+                document.getElementById('attemptsUsed').innerText = '0';
+                document.getElementById('attemptsLeft').innerText = data.max_attempts;
+                document.getElementById('scoreValue').innerText = '0';
+                document.getElementById('guessInput').value = '';
+                document.getElementById('historyBox').innerHTML = '<div class="history-item">💡 Игра началась! Удачи!</div>';
+                document.getElementById('guessInput').focus();
+                playWebSound('achievement');
+            }
+        }
+        
+        async function makeClassicGuess() {
+            if (!classicActive) return;
+            
+            const guess = parseInt(document.getElementById('guessInput').value);
+            if (isNaN(guess)) {
+                alert('Введи число!');
+                return;
+            }
+            
+            const response = await fetch('/api/guess', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ guess: guess })
+            });
+            
+            const data = await response.json();
+            
+            if (data.error) {
+                alert(data.error);
+                if (data.error.includes('окончена')) classicActive = false;
+                return;
+            }
+            
+            document.getElementById('attemptsUsed').innerText = data.attempts_used || 0;
+            document.getElementById('attemptsLeft').innerText = data.attempts_left;
+            if (data.score) document.getElementById('scoreValue').innerText = data.score;
+            
+            const history = document.getElementById('historyBox');
+            const item = document.createElement('div');
+            item.className = 'history-item';
+            item.innerHTML = `🔢 ${guess} → ${data.message}`;
+            history.appendChild(item);
+            history.scrollTop = history.scrollHeight;
+            
+            if (data.sound) playWebSound(data.sound);
+            
+            if (data.result === 'win') {
+                classicActive = false;
+                document.getElementById('statusMsg').innerHTML = `🏆 ${data.message}`;
+                document.getElementById('guessBtn').disabled = true;
+                loadRecords();
+            } else if (data.result === 'lose') {
+                classicActive = false;
+                document.getElementById('statusMsg').innerHTML = `💀 ${data.message}`;
+                document.getElementById('guessBtn').disabled = true;
+            } else {
+                document.getElementById('statusMsg').innerHTML = data.message;
+                document.getElementById('guessInput').value = '';
+                document.getElementById('guessInput').focus();
+            }
+        }
+        
+        function resetClassicGame() {
+            classicActive = false;
+            document.getElementById('classicGameArea').style.display = 'none';
+            document.getElementById('startClassicBtn').style.display = 'block';
+            document.getElementById('guessBtn').disabled = false;
+        }
+        
+        document.getElementById('startClassicBtn').onclick = () => { initAudio(); startClassicGame(); };
+        document.getElementById('guessBtn').onclick = makeClassicGuess;
+        document.getElementById('resetClassicBtn').onclick = resetClassicGame;
+        document.getElementById('guessInput').onkeypress = (e) => { if (e.key === 'Enter') makeClassicGuess(); };
+        
+        // -------------------- РЕЖИМ ИИ --------------------
+        let aiActive = false;
+        
+        async function startAiGame() {
+            const name = document.getElementById('aiPlayerName').value || 'Игрок';
+            const difficulty = document.getElementById('aiDifficulty').value;
+            
+            const response = await fetch('/api/ai/start', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: name, difficulty: difficulty })
+            });
+            
+            const data = await response.json();
+            
+            if (data.status === 'started') {
+                aiActive = true;
+                document.getElementById('aiGameArea').style.display = 'block';
+                document.getElementById('startAiBtn').style.display = 'none';
+                document.getElementById('aiStatusMsg').innerHTML = data.message;
+                document.getElementById('aiAttempts').innerText = '0';
+                document.getElementById('aiRemaining').innerText = data.attempts_left;
+                document.getElementById('aiGuessDisplay').innerText = data.guess;
+                document.getElementById('aiHistoryBox').innerHTML = '<div class="history-item">💡 ИИ начал угадывать!</div>';
+                document.getElementById('aiAnswer').value = '';
+                playWebSound('achievement');
+            }
+        }
+        
+        async function aiAnswer() {
+            if (!aiActive) return;
+            
+            const answer = document.getElementById('aiAnswer').value;
+            if (!answer) {
+                alert('Выбери ответ!');
+                return;
+            }
+            
+            const response = await fetch('/api/ai/guess', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ answer: answer })
+            });
+            
+            const data = await response.json();
+            
+            if (data.error) {
+                alert(data.error);
+                if (data.error.includes('окончена')) aiActive = false;
+                return;
+            }
+            
+            document.getElementById('aiAttempts').innerText = data.attempts_used || 0;
+            document.getElementById('aiRemaining').innerText = data.attempts_left;
+            
+            const history = document.getElementById('aiHistoryBox');
+            const item = document.createElement('div');
+            item.className = 'history-item';
+            
+            if (data.result === 'win') {
+                item.innerHTML = `🎉 ИИ угадал! Загаданное число было ${data.guess || '?'}`;
+                history.appendChild(item);
+                aiActive = false;
+                document.getElementById('aiStatusMsg').innerHTML = data.message;
+                document.getElementById('aiGuessDisplay').innerHTML = '🏆';
+                playWebSound('lose');
+            } else if (data.result === 'lose') {
+                item.innerHTML = `🎉 Ты победил! ИИ не смог угадать!`;
+                history.appendChild(item);
+                aiActive = false;
+                document.getElementById('aiStatusMsg').innerHTML = data.message;
+                document.getElementById('aiGuessDisplay').innerHTML = '🎉';
+                playWebSound('win');
+            } else {
+                item.innerHTML = `🤖 ИИ предполагает: ${data.guess}`;
+                history.appendChild(item);
+                document.getElementById('aiGuessDisplay').innerText = data.guess;
+                document.getElementById('aiStatusMsg').innerHTML = data.message;
+                document.getElementById('aiAnswer').value = '';
+            }
+            
+            history.scrollTop = history.scrollHeight;
+        }
+        
+        function resetAiGame() {
+            aiActive = false;
+            document.getElementById('aiGameArea').style.display = 'none';
+            document.getElementById('startAiBtn').style.display = 'block';
+            document.getElementById('aiAnswer').value = '';
+        }
+        
+        document.getElementById('startAiBtn').onclick = () => { initAudio(); startAiGame(); };
+        document.getElementById('aiAnswerBtn').onclick = aiAnswer;
+        document.getElementById('resetAiBtn').onclick = resetAiGame;
+        
+        // -------------------- СТАТИСТИКА --------------------
+        async function loadRecords() {
+            try {
+                const response = await fetch('/api/top_scores');
+                const data = await response.json();
+                const tbody = document.getElementById('recordsBody');
+                
+                if (!data.records || data.records.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5">Пока нет рекордов. Будь первым!</td></tr>';
+                    return;
+                }
+                
+                tbody.innerHTML = '';
+                data.records.slice(0, 10).forEach((record, idx) => {
+                    const row = tbody.insertRow();
+                    row.insertCell(0).innerText = idx + 1;
+                    row.insertCell(1).innerText = record.name;
+                    row.insertCell(2).innerText = record.score;
+                    row.insertCell(3).innerText = record.difficulty;
+                    row.insertCell(4).innerText = record.date;
+                });
+            } catch (e) {
+                console.error('Ошибка загрузки рекордов:', e);
+            }
+        }
+        
+        document.getElementById('refreshRecordsBtn').onclick = loadRecords;
+        
+        // -------------------- ГРОМКОСТЬ --------------------
+        const volumeSlider = document.getElementById('volumeSlider');
+        const volumeValue = document.getElementById('volumeValue');
+        volumeSlider.oninput = (e) => {
+            masterVolume = e.target.value / 100;
+            volumeValue.innerText = e.target.value + '%';
+        };
+        
+        // Инициализация
+        document.body.addEventListener('click', initAudio);
+        loadRecords();
+    </script>
+</body>
+</html>
