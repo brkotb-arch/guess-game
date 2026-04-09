@@ -139,6 +139,101 @@ def reset_game():
     session.clear()
     return jsonify({'status': 'reset'})
 
+# ========== РЕЖИМ "ИИ УГАДЫВАЕТ" ==========
+
+@app.route('/api/ai/start', methods=['POST'])
+def ai_start():
+    """Начинает режим, где ИИ угадывает число"""
+    data = request.get_json()
+    player_name = data.get('name', 'Гость')
+    difficulty = data.get('difficulty', 'средне')
+    
+    difficulties = {
+        'легко': {'min': 1, 'max': 10, 'max_attempts': 10},
+        'средне': {'min': 1, 'max': 20, 'max_attempts': 8},
+        'хардкор': {'min': 1, 'max': 50, 'max_attempts': 6}
+    }
+    
+    config = difficulties.get(difficulty, difficulties['средне'])
+    
+    session['ai_mode'] = 'guessing'
+    session['ai_player_name'] = player_name
+    session['ai_min'] = config['min']
+    session['ai_max'] = config['max']
+    session['ai_attempts_left'] = config['max_attempts']
+    session['ai_guesses'] = []
+    session['ai_finished'] = False
+    session['ai_difficulty'] = difficulty
+    
+    first_guess = (config['min'] + config['max']) // 2
+    session['ai_current_guess'] = first_guess
+    
+    return jsonify({
+        'status': 'started',
+        'message': f'🤖 ИИ готов угадывать! Загадай число от {config["min"]} до {config["max"]}.',
+        'guess': first_guess,
+        'attempts_left': config['max_attempts'],
+        'min': config['min'],
+        'max': config['max']
+    })
+
+@app.route('/api/ai/guess', methods=['POST'])
+def ai_make_guess():
+    """Обрабатывает ответ игрока на предположение ИИ"""
+    if session.get('ai_finished'):
+        return jsonify({'error': 'Игра окончена. Начни новую!'}), 400
+    
+    data = request.get_json()
+    answer = data.get('answer')
+    
+    if answer not in ['больше', 'меньше', 'равно']:
+        return jsonify({'error': 'Ответь "больше", "меньше" или "равно"'}), 400
+    
+    session['ai_attempts_left'] -= 1
+    session['ai_guesses'].append({
+        'guess': session['ai_current_guess'],
+        'answer': answer
+    })
+    
+    if answer == 'равно':
+        session['ai_finished'] = True
+        return jsonify({
+            'result': 'win',
+            'message': f'🤖 ИИ угадал твоё число {session["ai_current_guess"]} за {len(session["ai_guesses"])} попыток!',
+            'attempts_used': len(session['ai_guesses']),
+            'sound': 'lose'
+        })
+    
+    if session['ai_attempts_left'] <= 0:
+        session['ai_finished'] = True
+        return jsonify({
+            'result': 'lose',
+            'message': f'🎉 ИИ не смог угадать! Ты победил!',
+            'sound': 'win'
+        })
+    
+    if answer == 'больше':
+        session['ai_min'] = session['ai_current_guess'] + 1
+    else:
+        session['ai_max'] = session['ai_current_guess'] - 1
+    
+    new_guess = (session['ai_min'] + session['ai_max']) // 2
+    session['ai_current_guess'] = new_guess
+    
+    return jsonify({
+        'result': 'continue',
+        'message': '🤔 ИИ думает...',
+        'guess': new_guess,
+        'attempts_left': session['ai_attempts_left']
+    })
+
+@app.route('/api/ai/reset', methods=['POST'])
+def ai_reset():
+    """Сбрасывает режим ИИ"""
+    session.pop('ai_mode', None)
+    session.pop('ai_finished', None)
+    return jsonify({'status': 'reset'})
+
 # ========== РАБОТА С РЕКОРДАМИ ==========
 
 RECORDS_FILE = 'data/records.json'
@@ -170,124 +265,6 @@ def save_record(player_name, score, difficulty):
 
     with open(RECORDS_FILE, 'w', encoding='utf-8') as f:
         json.dump(records, f, ensure_ascii=False, indent=2)
-
-# ========== РЕЖИМ "ИИ УГАДЫВАЕТ" ==========
-
-@app.route('/api/ai/start', methods=['POST'])
-def ai_start():
-    """Начинает режим, где ИИ угадывает число"""
-    data = request.get_json()
-    player_name = data.get('name', 'Гость')
-    difficulty = data.get('difficulty', 'средне')
-    
-    difficulties = {
-        'легко': {'min': 1, 'max': 10, 'max_attempts': 10},
-        'средне': {'min': 1, 'max': 20, 'max_attempts': 8},
-        'хардкор': {'min': 1, 'max': 50, 'max_attempts': 6}
-    }
-    
-    config = difficulties.get(difficulty, difficulties['средне'])
-    
-    session['ai_mode'] = 'guessing'
-    session['player_name'] = player_name
-    session['ai_min'] = config['min']
-    session['ai_max'] = config['max']
-    session['ai_attempts_left'] = config['max_attempts']
-    session['ai_guesses'] = []
-    session['ai_finished'] = False
-    
-    # Первое предположение ИИ — середина диапазона
-    first_guess = (config['min'] + config['max']) // 2
-    session['ai_current_guess'] = first_guess
-    
-    return jsonify({
-        'status': 'started',
-        'message': f'🤖 ИИ готов угадывать! Загадай число от {config["min"]} до {config["max"]}.',
-        'guess': first_guess,
-        'attempts_left': config['max_attempts'],
-        'min': config['min'],
-        'max': config['max']
-    })
-
-@app.route('/api/ai/guess', methods=['POST'])
-def ai_make_guess():
-    """Обрабатывает ответ игрока на предположение ИИ"""
-    if session.get('ai_finished'):
-        return jsonify({'error': 'Игра окончена. Начни новую!'}), 400
-    
-    data = request.get_json()
-    answer = data.get('answer')  # 'больше', 'меньше', 'равно'
-    
-    if answer not in ['больше', 'меньше', 'равно']:
-        return jsonify({'error': 'Ответь "больше", "меньше" или "равно"'}), 400
-    
-    session['ai_attempts_left'] -= 1
-    session['ai_guesses'].append({
-        'guess': session['ai_current_guess'],
-        'answer': answer
-    })
-    
-    if answer == 'равно':
-        session['ai_finished'] = True
-        # Сохраняем победу ИИ в статистику
-        save_ai_record(session['player_name'], len(session['ai_guoses']), session.get('difficulty', 'средне'))
-        
-        return jsonify({
-            'result': 'win',
-            'message': f'🤖 ИИ угадал твоё число {session["ai_current_guess"]} за {len(session["ai_guesses"])} попыток!',
-            'attempts_used': len(session['ai_guesses']),
-            'sound': 'lose'  # Игрок проиграл
-        })
-    
-    if session['ai_attempts_left'] <= 0:
-        session['ai_finished'] = True
-        return jsonify({
-            'result': 'lose',
-            'message': f'🎉 ИИ не смог угадать! Ты победил! Загаданное число было {session["ai_current_guess"]}.',
-            'sound': 'win'
-        })
-    
-    # Обновляем диапазон поиска
-    if answer == 'больше':
-        session['ai_min'] = session['ai_current_guess'] + 1
-    else:  # меньше
-        session['ai_max'] = session['ai_current_guess'] - 1
-    
-    # Новое предположение — середина нового диапазона
-    new_guess = (session['ai_min'] + session['ai_max']) // 2
-    session['ai_current_guess'] = new_guess
-    
-    return jsonify({
-        'result': 'continue',
-        'message': f'🤔 ИИ думает...',
-        'guess': new_guess,
-        'attempts_left': session['ai_attempts_left']
-    })
-
-def save_ai_record(player_name, attempts, difficulty):
-    """Сохраняет результат игры с ИИ"""
-    records = load_ai_records()
-    records.append({
-        'name': player_name,
-        'attempts': attempts,
-        'difficulty': difficulty,
-        'date': datetime.now().strftime('%Y-%m-%d %H:%M')
-    })
-    records.sort(key=lambda x: x['attempts'])
-    records = records[:20]
-    
-    with open('data/ai_records.json', 'w', encoding='utf-8') as f:
-        json.dump(records, f, ensure_ascii=False, indent=2)
-
-def load_ai_records():
-    ensure_data_dir()
-    if not os.path.exists('data/ai_records.json'):
-        return []
-    try:
-        with open('data/ai_records.json', 'r', encoding='utf-8') as f:
-            return json.load(f)
-    except:
-        return []
 
 # ========== ЗАПУСК ==========
 if __name__ == '__main__':
