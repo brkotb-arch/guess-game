@@ -42,9 +42,9 @@ guess-game/
 ├── requirements.txt    # Зависимости
 └── README.md           # Этот файл
 
-👤 Автор
-brkotb
+## 👤 Автор
+     brkotb
 
-⭐ Если понравился проект, поставь звезду на GitHub!
-🔗 Сайт в интернете: guess-game-27b5.onrender.com
+## ⭐ Если понравился проект, поставь звезду на GitHub!
+## 🔗 Сайт в интернете: guess-game-27b5.onrender.com
 
