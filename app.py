@@ -1,11 +1,53 @@
 from flask import Flask, jsonify, render_template, request, session
 from datetime import datetime
 import random
-import json
 import os
+import psycopg2
+from psycopg2.extras import RealDictCursor
 
 app = Flask(__name__)
 app.secret_key = 'super-secret-key-2024'
+
+# ========== НАСТРОЙКА БАЗЫ ДАННЫХ ==========
+
+DATABASE_URL = "postgresql://postgres:ТВОЙ_ПАРОЛЬ@localhost:5432/guess_game"
+
+def get_db_connection():
+    return psycopg2.connect(DATABASE_URL)
+
+def init_db():
+    with get_db_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS records (
+                    id SERIAL PRIMARY KEY,
+                    name VARCHAR(100) NOT NULL,
+                    score INTEGER NOT NULL,
+                    difficulty VARCHAR(50),
+                    date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+        conn.commit()
+
+def save_record(player_name, score, difficulty):
+    with get_db_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                "INSERT INTO records (name, score, difficulty) VALUES (%s, %s, %s)",
+                (player_name, score, difficulty)
+            )
+        conn.commit()
+
+def load_records():
+    with get_db_connection() as conn:
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+            cur.execute(
+                "SELECT name, score, difficulty, date FROM records ORDER BY score DESC LIMIT 10"
+            )
+            return cur.fetchall()
+
+# ========== ИНИЦИАЛИЗАЦИЯ БД ==========
+init_db()
 
 # ========== ГЛАВНАЯ СТРАНИЦА ==========
 @app.route('/')
@@ -34,10 +76,11 @@ def start_game():
     player_name = data.get('name', 'Гость')
     difficulty = data.get('difficulty', 'средне')
 
+    # НОВЫЕ НАСТРОЙКИ СЛОЖНОСТИ (исправленный баланс)
     difficulties = {
-        'легко': {'min': 1, 'max': 10, 'attempts': 10, 'points': 100},
-        'средне': {'min': 1, 'max': 20, 'attempts': 8, 'points': 200},
-        'хардкор': {'min': 1, 'max': 50, 'attempts': 6, 'points': 400}
+        'легко': {'min': 1, 'max': 10, 'attempts': 5, 'points': 100},
+        'средне': {'min': 1, 'max': 20, 'attempts': 6, 'points': 200},
+        'хардкор': {'min': 1, 'max': 50, 'attempts': 7, 'points': 400}
     }
 
     config = difficulties.get(difficulty, difficulties['средне'])
@@ -143,15 +186,14 @@ def reset_game():
 
 @app.route('/api/ai/start', methods=['POST'])
 def ai_start():
-    """Начинает режим, где ИИ угадывает число"""
     data = request.get_json()
     player_name = data.get('name', 'Гость')
     difficulty = data.get('difficulty', 'средне')
     
     difficulties = {
-        'легко': {'min': 1, 'max': 10, 'max_attempts': 10},
-        'средне': {'min': 1, 'max': 20, 'max_attempts': 8},
-        'хардкор': {'min': 1, 'max': 50, 'max_attempts': 6}
+        'легко': {'min': 1, 'max': 10, 'max_attempts': 5},
+        'средне': {'min': 1, 'max': 20, 'max_attempts': 6},
+        'хардкор': {'min': 1, 'max': 50, 'max_attempts': 7}
     }
     
     config = difficulties.get(difficulty, difficulties['средне'])
@@ -179,7 +221,6 @@ def ai_start():
 
 @app.route('/api/ai/guess', methods=['POST'])
 def ai_make_guess():
-    """Обрабатывает ответ игрока на предположение ИИ"""
     if session.get('ai_finished'):
         return jsonify({'error': 'Игра окончена. Начни новую!'}), 400
     
@@ -229,42 +270,9 @@ def ai_make_guess():
 
 @app.route('/api/ai/reset', methods=['POST'])
 def ai_reset():
-    """Сбрасывает режим ИИ"""
     session.pop('ai_mode', None)
     session.pop('ai_finished', None)
     return jsonify({'status': 'reset'})
-
-# ========== РАБОТА С РЕКОРДАМИ ==========
-
-RECORDS_FILE = 'data/records.json'
-
-def ensure_data_dir():
-    if not os.path.exists('data'):
-        os.makedirs('data')
-
-def load_records():
-    ensure_data_dir()
-    if not os.path.exists(RECORDS_FILE):
-        return []
-    try:
-        with open(RECORDS_FILE, 'r', encoding='utf-8') as f:
-            return json.load(f)
-    except:
-        return []
-
-def save_record(player_name, score, difficulty):
-    records = load_records()
-    records.append({
-        'name': player_name,
-        'score': score,
-        'difficulty': difficulty,
-        'date': datetime.now().strftime('%Y-%m-%d %H:%M')
-    })
-    records.sort(key=lambda x: x['score'], reverse=True)
-    records = records[:20]
-
-    with open(RECORDS_FILE, 'w', encoding='utf-8') as f:
-        json.dump(records, f, ensure_ascii=False, indent=2)
 
 # ========== ЗАПУСК ==========
 if __name__ == '__main__':
