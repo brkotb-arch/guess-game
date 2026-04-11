@@ -35,7 +35,7 @@ venv\Scripts\activate
 pip install -r requirements.txt
 python app.py
 
-Открой в браузере: `http://127.0.0.1:5000`
+📍 Локальный запуск: http://127.0.0.1:5000 (после python app.py)
 
 📁 Структура проекта
 
@@ -59,3 +59,4 @@ guess-game/
 
 ⭐ Если понравился проект, поставь звезду на GitHub!
 ```
+🔗 Сайт в интернете: guess-game-27b5.onrender.com
