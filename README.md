@@ -41,6 +41,7 @@ guess-game/
 │   └── sounds.js       # Звуки через Web Audio API
 ├── requirements.txt    # Зависимости
 └── README.md           # Этот файл
+```
 
 ## 👤 Автор
      brkotb
