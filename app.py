@@ -5,6 +5,8 @@ import os
 import psycopg2
 from psycopg2.extras import RealDictCursor
 
+DATABASE_URL = os.environ.get('DATABASE_URL', 'postgresql://postgres:пароль@localhost:5432/guess_game')
+
 app = Flask(__name__)
 app.secret_key = 'super-secret-key-2024'
 
