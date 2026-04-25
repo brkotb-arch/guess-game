@@ -12,7 +12,7 @@ app.secret_key = 'super-secret-key-2024'
 
 # ========== НАСТРОЙКА БАЗЫ ДАННЫХ ==========
 
-DATABASE_URL = "postgresql://postgres:ТВОЙ_ПАРОЛЬ@localhost:5432/guess_game"
+# DATABASE_URL = "postgresql://postgres:ТВОЙ_ПАРОЛЬ@localhost:5432/guess_game"
 
 def get_db_connection():
     return psycopg2.connect(DATABASE_URL)
