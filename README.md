@@ -64,6 +64,6 @@ guess-game/
 Если понравился проект, поставь звезду на GitHub — это помогает другим найти игру.
 
 ## 🔗 Ссылки
-GitHub репозиторий: github.com/brkotb/guess-game
 
-Сайт в интернете: guess-game-27b5.onrender.com
+- **GitHub репозиторий:** [github.com/brkotb/guess-game](https://github.com/brkotb/guess-game)
+- **Сайт в интернете:** [guess-game-27b5.onrender.com](https://guess-game-27b5.onrender.com)
