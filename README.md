@@ -18,9 +18,12 @@
 - **Frontend:** HTML5, CSS3, JavaScript
 - **Звуки:** Web Audio API
 - **База данных:** PostgreSQL
+- **Контейнеризация:** Docker
 - **Деплой:** Render.com
 
 ## 🚀 Быстрый старт
+
+### 📍 Локальный запуск
 
 ```bash
 git clone https://github.com/brkotb/guess-game.git
@@ -29,33 +32,38 @@ python -m venv venv
 venv\Scripts\activate
 pip install -r requirements.txt
 python app.py
+```
 
-📍 Локальный запуск: http://127.0.0.1:5000
+## 🐳 Запуск через Docker
+```bash
+docker run -d -p 10000:10000 -e DATABASE_URL="postgresql://user:pass@host/db" guess-game
+Открой в браузере: http://localhost:10000
+```
+Важно: Замени DATABASE_URL="postgresql://user:pass@host/db" на реальную строку подключения к твоей базе данных PostgreSQL. Её можно найти в настройках твоего сервиса на Render.
 
-📁 Структура проекта
+## 📁 Структура проекта
+
+```
 guess-game/
 ├── app.py              # Главный Flask-сервер
-├── templates/
-│   └── index.html      # Интерфейс игры
-├── static/
-│   └── sounds.js       # Звуки через Web Audio API
+├── fastapi_app.py      # Экспериментальная версия на FastAPI
 ├── requirements.txt    # Зависимости
+├── Dockerfile          # Инструкция для сборки Docker-образа
+├── .dockerignore       # Файлы, которые не попадают в образ
+├── templates/
+│   └── index.html
+├── static/
+│   └── sounds.js
 └── README.md           # Этот файл
 ```
 
 ## 👤 Автор
-
 **brkotb**
 
----
-
 ## ⭐ Поддержка проекта
-
 Если понравился проект, поставь звезду на GitHub — это помогает другим найти игру.
 
----
-
 ## 🔗 Ссылки
+GitHub репозиторий: github.com/brkotb/guess-game
 
-- **GitHub репозиторий:** [github.com/brkotb/guess-game](https://github.com/brkotb/guess-game)
-- **Сайт в интернете:** [guess-game-27b5.onrender.com](https://guess-game-27b5.onrender.com)
+Сайт в интернете: guess-game-27b5.onrender.com
